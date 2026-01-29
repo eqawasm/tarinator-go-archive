@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	securejoin "github.com/cyphar/filepath-securejoin"
 )
 
 func Tarinate(paths []string, tarPath string) error {
@@ -114,7 +115,13 @@ func UnTarinate(extractPath, sourcefile string) error {
 			return err
 		}
 
-		filename := filepath.Join(extractPath, filepath.FromSlash(header.Name))
+		name := filepath.FromSlash(header.Name)
+		name = strings.TrimLeft(name, string(filepath.Separator))
+		
+		filename, err := securejoin.SecureJoin(extractPath, name)
+		if err != nil {
+		    return err // or "continue" to skip bad entries
+		}
 
 		switch header.Typeflag {
 		case tar.TypeDir:
